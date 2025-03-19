@@ -28,8 +28,11 @@ function App() {
   // prefix of card urls
   const [domain, setDomain] = useState("https://tapvcard.com/");
 
+  // custom prefix of card urls
+  const [customDomain, setCustomDomain] = useState(false);
+
   // dropdown domain list
-  const domainList = ["https://tapvcard.com/", "https://tapvcard.in/"];
+  const domainList = ["https://tapvcard.com/", "https://tapvcard.in/", "custom"];
 
   const [loading, setLoading] = useState(false);
 
@@ -143,11 +146,14 @@ function App() {
       />
       {/* prefix url input */}
       <label htmlFor="domainList">URL Prefix:</label>
-      <select name="domainSelect" id="domainList" onChange={(e) => setDomain(e.target.value)}>
+      <select name="domainSelect" id="domainList" onChange={(e) => setDomain(e.target.value === 'custom' ? setCustomDomain('custom') : e.target.value)}>
         {domainList.map((domain) => (
           <option value={domain}>{domain}</option>
         ))}
       </select>
+      { customDomain &&
+      <input type="url" name="domainInput" id="domainInput" placeholder="Enter domain ex- https://example.com/" onChange={(e) => setDomain(e.target.value)} />
+      }
       {loading && <PacmanLoader />}
       {/* card urls */}
       <ol ref={qrRef}>
