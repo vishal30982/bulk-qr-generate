@@ -3,12 +3,14 @@ import "./App.css";
 import { useState } from "react";
 import { QRious } from "react-qrious";
 import JSZip from "jszip";
-import ReactLoading from 'react-loading';
 import { PacmanLoader } from "react-spinners";
 
 function App() {
   // input csv file
   const [file, setFile] = useState();
+
+  // name column
+  const [nameCol, setNameCol] = useState(1);
 
   // names e.g. ["Dr Ajit K Yadav", ....]
   const [names, setNames] = useState([]);
@@ -60,7 +62,7 @@ function App() {
       const columns = lines.map((row) => row.split(","));
 
       // names e.g. ["Dr Ajit K Yadav", ....]
-      const names = columns.map((cells) => cells[0]);
+      const names = columns.map((cells) => cells[(nameCol - 1) || 1]);
 
       // URI friendly Names e.g. ["dr-ajit-k-yadav", ....]
       const URINames = names.map((name) =>
@@ -97,6 +99,8 @@ function App() {
       const urls = URINames.map((name) => `${domain}${name}`);
       setUrls(urls);
 
+      setReady(false);
+      downloadRef.current?.removeAttribute("href");
       setLoading(false);
     });
   }, [file]);
@@ -144,6 +148,10 @@ function App() {
         onChange={(e) => setFile(e.target.files[0])}
         accept=".csv"
       />
+      {/* name column */}
+      <label htmlFor="colInp">Column Of Name:</label>
+      <input type="number" name="colInp" id="colInp" onChange={(e) => setNameCol(parseInt(e.target.value))}/>
+
       {/* prefix url input */}
       <label htmlFor="domainList">URL Prefix:</label>
       <select name="domainSelect" id="domainList" onChange={(e) => setDomain(e.target.value === 'custom' ? setCustomDomain('custom') : e.target.value)}>
@@ -154,6 +162,7 @@ function App() {
       { customDomain &&
       <input type="url" name="domainInput" id="domainInput" placeholder="Enter domain ex- https://example.com/" onChange={(e) => setDomain(e.target.value)} />
       }
+
       {loading && <PacmanLoader />}
       {/* card urls */}
       <ol ref={qrRef}>

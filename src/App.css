@@ -76,3 +76,10 @@ input[type="url"] {
     border: 1px solid #c2c2c2;
     border-radius: 5px;
 }
+input[type="number"] {
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    border: 1px solid #c2c2c2;
+    border-radius: 5px;
+}
