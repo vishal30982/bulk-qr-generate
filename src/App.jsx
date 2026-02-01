@@ -10,7 +10,7 @@ function App() {
   const [file, setFile] = useState();
 
   // name column
-  const [nameCol, setNameCol] = useState(1);
+  const [nameCol, setNameCol] = useState(2);
 
   // names e.g. ["Dr Ajit K Yadav", ....]
   const [names, setNames] = useState([]);
@@ -51,18 +51,22 @@ function App() {
     fileReader.readAsText(file);
 
     // when file is read
-    fileReader.addEventListener("load", (e) => {
+    fileReader.addEventListener("load", async (e) => {
       // csv output
       const csv = fileReader.result;
+      // console.log(csv)
 
       // line seperation e.g. ["Dr Ajit K Yadav,yadavajitdr@gmail.com,+91 9654466159", ....]
       const lines = csv.split("\n");
+      // console.log(lines)
 
       // keyword seperation e.g. ["Dr Ajit K Yadav", "yadavajitdr@gmail.com", "+91 9654466159", ....]
       const columns = lines.map((row) => row.split(","));
+      // console.log(columns)
 
       // names e.g. ["Dr Ajit K Yadav", ....]
       const names = columns.map((cells) => cells[(nameCol - 1) || 1]);
+      // console.log(names)
 
       // URI friendly Names e.g. ["dr-ajit-k-yadav", ....]
       const URINames = names.map((name) =>
@@ -94,6 +98,44 @@ function App() {
       }
       
       setNames(names);
+
+      // change 'throttle:60,1' in api group of $middlewareGroups property in app/Http/Kernel.php file to -> 'throttle:1000000,0.5'
+      if (domain.includes('https://tapvcard.com/')) {
+        let path = undefined;
+        if (customDomain) {
+          const url = new URL(domain);
+          path = url.pathname.replace('/', '');
+        }
+        for (let i = 0; i < URINames.length; i++) {
+          const name = URINames[i];
+          try {
+            const response = await fetch(path ? `https://tapvcard.com/api/checkCardUrl?url=${path}${name}` : `https://tapvcard.com/api/checkCardUrl?url=${name}`);
+            if(!response.ok) {
+              console.error('checkCardUrl failed for', name, 'response:', response);
+            }
+            const data = await response.json();
+            console.log(`uri:${name} data: ${data.exist ? 'exists' : 'available'}`);
+            if (!data.exist) continue;
+            let n = 1;
+            while (true) {
+              const response2 = await fetch(path ? `https://tapvcard.com/api/checkCardUrl?url=${path}${name}-${n}` : `https://tapvcard.com/api/checkCardUrl?url=${name}-${n}`);
+              if(!response.ok) {
+                console.error('checkCardUrl failed for', name, 'response:', response2);
+              }
+              const data2 = await response2.json();
+              console.log(`uri:${name}-${n} data: ${data2.exist ? 'exists' : 'available'}`);
+              if (!data2.exist) {
+                URINames[i] = `${name}-${n}`;
+                break;
+              }
+              n++;
+            }
+          } catch (err) {
+            console.error('checkCardUrl failed for', name, err);
+            continue;
+          }
+        }
+      }
 
       // card urls e.g. ["https://tapvcard.com/dr-ajit-k-yadav", ....]
       const urls = URINames.map((name) => `${domain}${name}`);
@@ -150,11 +192,11 @@ function App() {
       />
       {/* name column */}
       <label htmlFor="colInp">Column Of Name:</label>
-      <input type="number" name="colInp" id="colInp" onChange={(e) => setNameCol(parseInt(e.target.value))}/>
+      <input type="number" name="colInp" id="colInp" placeholder="default is 2nd coloumn" onChange={(e) => setNameCol(parseInt(e.target.value))}/>
 
       {/* prefix url input */}
       <label htmlFor="domainList">URL Prefix:</label>
-      <select name="domainSelect" id="domainList" onChange={(e) => setDomain(e.target.value === 'custom' ? setCustomDomain('custom') : e.target.value)}>
+      <select name="domainSelect" id="domainList" onChange={(e) => e.target.value === 'custom' ? setCustomDomain('custom') : setDomain(e.target.value)}>
         {domainList.map((domain) => (
           <option value={domain}>{domain}</option>
         ))}
