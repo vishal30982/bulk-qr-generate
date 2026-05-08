@@ -83,3 +83,26 @@ input[type="number"] {
     border: 1px solid #c2c2c2;
     border-radius: 5px;
 }
+
+/* social media mode */
+button#redirectBtn {
+    padding: 15px 8px;
+    background-color: red;
+    color: white;
+    border: 0.1px rgba(0, 0, 0, 0.548) solid;
+    border-radius: 10px;
+}
+button#redirectBtn:active {
+    border: 0.5px rgb(0, 0, 0) solid;
+}
+button#socialQrsBtn {
+    padding: 12px 10px;
+    background-color: #007bff;
+    color: white;
+    font-size: 1.2rem;
+    border: 0.1px rgba(0, 0, 0, 0.548) solid;
+    border-radius: 10px;
+}
+input#endNumInp {
+    margin-bottom: 50px;
+}

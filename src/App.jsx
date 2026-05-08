@@ -38,6 +38,14 @@ function App() {
 
   const [loading, setLoading] = useState(false);
 
+
+  // social media mode
+  const [socialMediaMode, setSocialMediaMode] = useState(false);
+  const socialMediaTypeList = [{name: "Google", prefix: "tvcgr"}, {name: "FaceBook", prefix: "tvcfb"}, {name: "Intagram", prefix: "tvcig"}, {name: "Twitter", prefix: "tvcx"}, {name: "whatsapp", prefix: "tvcwa"}, {name: "LinkedIn", prefix: "tvcli"}, {name: "YouTube", prefix: "tvcyt"}, {name: "Standee", prefix: "tvcs"}];
+  const [socialMediaType, setSocialMediaType] = useState(null); // format: {name: "facebook", type: "tvcfb"}
+  const [startSocialIndex, setStartSocialIndex] = useState(null);
+  const [endSocialIndex, setEndSocialIndex] = useState(null);
+
   // reading csv file and seperating names and generating urls
   useEffect(() => {
     if (!file) return;
@@ -178,48 +186,92 @@ function App() {
     
   }
 
+  // socal media qrs
+  function createSocialQrs () {
+    if (!socialMediaType || !startSocialIndex || !endSocialIndex) return;
+    if (startSocialIndex >= endSocialIndex) return;
+
+    setLoading(true);
+
+    const socialUrls = [];
+    const domain = "https://rd.tapvcard.com";
+    for (let i = startSocialIndex; i <= endSocialIndex; i++) {
+      socialUrls.push(`${domain}/${socialMediaType.prefix}/${i}`);
+      setNames((prev) => [...prev, `${socialMediaType.prefix}${i}`]);
+    }
+    setUrls(socialUrls);
+    setLoading(false);
+  }
   return (
     <main>
-      <h1>bulk QRs generator</h1>
-      <div id="qrs" style={{marginBottom: urls.length === 0 && "7rem"}}>
-      {/* file input */}
-      <input
-        type="file"
-        name="fileInp"
-        id="fileInp"
-        onChange={(e) => setFile(e.target.files[0])}
-        accept=".csv"
-      />
-      {/* name column */}
-      <label htmlFor="colInp">Column Of Name:</label>
-      <input type="number" name="colInp" id="colInp" placeholder="default is 2nd coloumn" onChange={(e) => setNameCol(parseInt(e.target.value))}/>
+      <h1 style={{marginBottom: socialMediaMode && "4rem"}}>{socialMediaMode ? "Bulk Social Media QRs Generator" : "Bulk QRs Generator"}</h1>
+      <div id="qrs" style={{marginBottom: (urls.length === 0 && !socialMediaMode) && "7rem"}}>
+        {socialMediaMode ? 
+        (
+          <>
+            {/* Social Media Type Select */}
+            <label htmlFor="typeSelect">URL Prefix:</label>
+            <select name="typeSelect" id="typesList" onChange={(e) => setSocialMediaType(socialMediaTypeList[parseInt(e.target.value)])} required>
+              <option value={""}>Select Social Media Type</option>
+              {socialMediaTypeList.map((type, i) => (
+              <option key={i} value={i}>{type.name}</option>
+              ))}
+            </select>
 
-      {/* prefix url input */}
-      <label htmlFor="domainList">URL Prefix:</label>
-      <select name="domainSelect" id="domainList" onChange={(e) => e.target.value === 'custom' ? setCustomDomain('custom') : setDomain(e.target.value)}>
-        {domainList.map((domain) => (
-          <option value={domain}>{domain}</option>
-        ))}
-      </select>
-      { customDomain &&
-      <input type="url" name="domainInput" id="domainInput" placeholder="Enter domain ex- https://example.com/" onChange={(e) => setDomain(e.target.value)} />
-      }
+            {/* Range Input */}
+            {/* starting number Input */}
+            <label htmlFor="startNumInp">From:</label>
+            <input type="number" name="startNumInp" id="startNumInp" placeholder="starting number of card" onChange={(e) => setStartSocialIndex(parseInt(e.target.value))} required/>
 
-      {loading && <PacmanLoader />}
-      {/* card urls */}
-      <ol ref={qrRef}>
-        {urls.map((url) => (
-          <li>
-            <h2>{url}</h2>
-            <QRious size={300} padding={18} value={url}/>
-          </li>
-        ))}
-      </ol>
+            {/* ending number Input */}
+            <label htmlFor="endNumInp">To:</label>
+            <input type="number" name="endNumInp" id="endNumInp" placeholder="ending number of card" onChange={(e) => setEndSocialIndex(parseInt(e.target.value))} required/>
+
+            {urls.length === 0 && <button id="socialQrsBtn" onClick={() => createSocialQrs()}>Create Qrs</button>}
+          </>
+        ) : (
+          <>
+            {/* file input */}
+            <input
+              type="file"
+              name="fileInp"
+              id="fileInp"
+              onChange={(e) => setFile(e.target.files[0])}
+              accept=".csv"
+            />
+            {/* name column */}
+            <label htmlFor="colInp">Column Of Name:</label>
+            <input type="number" name="colInp" id="colInp" placeholder="default is 2nd coloumn" onChange={(e) => setNameCol(parseInt(e.target.value))}/>
+
+            {/* prefix url input */}
+            <label htmlFor="domainList">URL Prefix:</label>
+            <select name="domainSelect" id="domainList" onChange={(e) => e.target.value === 'custom' ? setCustomDomain('custom') : setDomain(e.target.value)}>
+              {domainList.map((domain, i) => (
+                <option key={i} value={domain}>{domain}</option>
+              ))}
+            </select>
+            { customDomain &&
+            <input type="url" name="domainInput" id="domainInput" placeholder="Enter domain ex- https://example.com/" onChange={(e) => setDomain(e.target.value)} />
+            }
+          </>
+        )}
+
+        {loading && <PacmanLoader />}
+        {/* card urls */}
+        <ol ref={qrRef}>
+          {urls.map((url, i) => (
+            <li key={i}>
+              <h2>{url}</h2>
+              <QRious size={300} padding={18} value={url}/>
+            </li>
+          ))}
+        </ol>
       </div>
       {/* QR download button */}
       {urls.length !== 0 && <a ref={downloadRef} onClick={download}>
         {ready ? "Download QRs" : "Generate QRs"}
       </a>}
+      {(urls.length === 0 && !socialMediaMode) && <button id="redirectBtn" onClick={() => setSocialMediaMode(true)}>Create Social Media QRs</button>}
     </main>
   );
 }
